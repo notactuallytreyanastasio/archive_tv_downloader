@@ -4,7 +4,10 @@
   "description": "Desktop app for downloading videos from Archive.org with a 1980s Mac OS aesthetic",
   "main": "dist-electron/main.js",
   "type": "module",
-  "author": "Your Name",
+  "author": {
+    "name": "Archive Downloader Contributors",
+    "email": "noreply@example.com"
+  },
   "license": "MIT",
   "scripts": {
     "dev": "vite",
