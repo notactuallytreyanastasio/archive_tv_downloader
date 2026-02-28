@@ -54,34 +54,94 @@ export class ArchiveClient {
     return await response.json();
   }
 
-  async getSingleItem(identifier: string): Promise<Video | null> {
+  async getSingleItem(identifier: string): Promise<Video[]> {
     try {
       const metadata = await this.getMetadata(identifier);
-      const videoFile = this.selectBestVideoFile(metadata.files);
+      const videoFiles = this.getAllVideoFiles(metadata.files);
 
-      if (!videoFile) {
+      if (videoFiles.length === 0) {
         throw new Error('No video files found in this item');
       }
 
-      const downloadUrl = this.constructDownloadUrl(metadata, videoFile);
       const thumbnailUrl = `${ARCHIVE_API_BASE}/services/img/${identifier}`;
+      const baseTitle = metadata.metadata.title || identifier;
+      const videos: Video[] = [];
 
-      return {
-        id: identifier,
-        title: metadata.metadata.title || identifier,
-        description: metadata.metadata.description || null,
-        publicDate: new Date(metadata.metadata.date || Date.now()),
-        duration: this.parseDuration(metadata.metadata.runtime),
-        thumbnailUrl,
-        primaryVideoUrl: downloadUrl,
-        primaryFormat: videoFile.format,
-        collection: 'single-item',
-        downloadStatus: 'not_downloaded',
-      };
+      // If there's only one video file, treat it as a single video
+      if (videoFiles.length === 1) {
+        const downloadUrl = this.constructDownloadUrl(metadata, videoFiles[0]);
+        videos.push({
+          id: identifier,
+          title: baseTitle,
+          description: metadata.metadata.description || null,
+          publicDate: new Date(metadata.metadata.date || Date.now()),
+          duration: this.parseDuration(metadata.metadata.runtime),
+          thumbnailUrl,
+          primaryVideoUrl: downloadUrl,
+          primaryFormat: videoFiles[0].format,
+          collection: identifier,
+          downloadStatus: 'not_downloaded',
+        });
+      } else {
+        // Multiple video files - create separate entries for each
+        for (let i = 0; i < videoFiles.length; i++) {
+          const videoFile = videoFiles[i];
+          const downloadUrl = this.constructDownloadUrl(metadata, videoFile);
+
+          // Extract episode/part name from filename
+          const fileName = videoFile.name.replace(/\.(mp4|mkv|avi|ogv|webm)$/i, '');
+          const episodeTitle = this.extractEpisodeTitle(fileName, baseTitle);
+
+          videos.push({
+            id: `${identifier}_${i + 1}`,
+            title: episodeTitle,
+            description: metadata.metadata.description || null,
+            publicDate: new Date(metadata.metadata.date || Date.now()),
+            duration: null, // Individual file durations not available in metadata
+            thumbnailUrl,
+            primaryVideoUrl: downloadUrl,
+            primaryFormat: videoFile.format,
+            collection: identifier,
+            downloadStatus: 'not_downloaded',
+          });
+        }
+      }
+
+      return videos;
     } catch (error) {
       console.error(`Failed to fetch item ${identifier}:`, error);
       throw error;
     }
+  }
+
+  private extractEpisodeTitle(fileName: string, baseTitle: string): string {
+    // Try to extract episode number or meaningful title from filename
+    // Common patterns: "01 Episode Name", "Episode 01", "S01E01", etc.
+
+    // Remove common prefixes
+    let title = fileName
+      .replace(new RegExp(`^${baseTitle}\\s*-?\\s*`, 'i'), '')
+      .replace(/^(ep|episode|part|chapter)\s*/i, '')
+      .trim();
+
+    // If we extracted something meaningful, use it
+    if (title && title.length > 0 && title !== fileName) {
+      return `${baseTitle} - ${title}`;
+    }
+
+    // Otherwise use the filename
+    return title || fileName;
+  }
+
+  private getAllVideoFiles(files: ArchiveFile[]): ArchiveFile[] {
+    const videoFormats = ['h.264', 'MPEG4', '512Kb MPEG4', 'WebM', 'Ogg Video', 'MPEG2', 'Matroska'];
+
+    return files
+      .filter(f => videoFormats.includes(f.format))
+      .sort((a, b) => {
+        // Sort by name to keep episodes in order
+        return a.name.localeCompare(b.name);
+      });
   }
 
   async searchCollection(collection: string, rows: number = 100, start: number = 0): Promise<ArchiveDoc[]> {
@@ -140,11 +200,11 @@ export class ArchiveClient {
 
       // Check if it's a video item (not a collection)
       if (metadata.metadata.mediatype === 'movies' || this.hasVideoFiles(metadata.files)) {
-        console.log(`Detected single video item: ${identifierOrCollection}`);
-        const video = await this.getSingleItem(identifierOrCollection);
-        if (video) {
-          if (onProgress) onProgress(1, 1);
-          return [video];
+        console.log(`Detected video item: ${identifierOrCollection}`);
+        const videos = await this.getSingleItem(identifierOrCollection);
+        if (videos && videos.length > 0) {
+          if (onProgress) onProgress(videos.length, videos.length);
+          return videos;
         }
         return [];
       }
