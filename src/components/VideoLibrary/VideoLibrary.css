@@ -21,10 +21,21 @@
   gap: 16px;
 }
 
+.video-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .video-count {
   font-size: 12px;
   color: var(--gray-3);
   white-space: nowrap;
+}
+
+.download-all-button {
+  font-weight: bold;
+  padding: 6px 16px;
 }
 
 .video-grid {

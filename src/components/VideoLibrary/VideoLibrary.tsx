@@ -31,6 +31,24 @@ export default function VideoLibrary() {
     }
   };
 
+  const handleDownloadAll = async () => {
+    if (filteredVideos.length === 0) return;
+
+    const confirmed = confirm(
+      `Queue ${filteredVideos.length} video${filteredVideos.length !== 1 ? 's' : ''} for download?`
+    );
+
+    if (!confirmed) return;
+
+    for (const video of filteredVideos) {
+      try {
+        await window.electronAPI.downloadVideo(video.id);
+      } catch (error) {
+        console.error(`Failed to queue ${video.title}:`, error);
+      }
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="video-library loading">
@@ -43,8 +61,15 @@ export default function VideoLibrary() {
     <div className="video-library">
       <div className="video-library-header">
         <SearchBar />
-        <div className="video-count">
-          {filteredVideos.length} video{filteredVideos.length !== 1 ? 's' : ''}
+        <div className="video-header-actions">
+          <div className="video-count">
+            {filteredVideos.length} video{filteredVideos.length !== 1 ? 's' : ''}
+          </div>
+          {filteredVideos.length > 0 && (
+            <button onClick={handleDownloadAll} className="download-all-button">
+              Download All ({filteredVideos.length})
+            </button>
+          )}
         </div>
       </div>
 
