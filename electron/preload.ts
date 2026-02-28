@@ -6,6 +6,7 @@ export type ElectronAPI = {
   searchVideos: (query: string) => Promise<any[]>;
   syncCollection: (collectionName: string) => Promise<void>;
   deleteVideo: (videoId: string) => Promise<void>;
+  renameVideo: (videoId: string, newName: string) => Promise<void>;
 
   // Downloads
   downloadVideo: (videoId: string) => Promise<void>;
@@ -38,6 +39,7 @@ const electronAPI: ElectronAPI = {
   searchVideos: (query: string) => ipcRenderer.invoke('search-videos', query),
   syncCollection: (collectionName: string) => ipcRenderer.invoke('sync-collection', collectionName),
   deleteVideo: (videoId: string) => ipcRenderer.invoke('delete-video', videoId),
+  renameVideo: (videoId: string, newName: string) => ipcRenderer.invoke('rename-video', videoId, newName),
 
   // Downloads
   downloadVideo: (videoId: string) => ipcRenderer.invoke('download-video', videoId),

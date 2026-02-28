@@ -82,3 +82,8 @@
   background: var(--gray-light) !important;
   font-size: 11px;
 }
+
+.rename-button {
+  background: var(--gray-light) !important;
+  font-size: 11px;
+}

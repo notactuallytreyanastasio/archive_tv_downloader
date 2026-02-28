@@ -48,6 +48,15 @@ export function setupIPCHandlers() {
     }
   });
 
+  ipcMain.handle('rename-video', async (_event, videoId: string, newName: string) => {
+    try {
+      await videoService.renameVideo(videoId, newName);
+    } catch (error) {
+      console.error('Error in rename-video handler:', error);
+      throw error;
+    }
+  });
+
   // Download handlers
   ipcMain.handle('download-video', async (_event, videoId: string) => {
     try {

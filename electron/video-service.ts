@@ -64,6 +64,41 @@ export class VideoService {
     db.deleteVideo(id);
   }
 
+  async renameVideo(id: string, newName: string): Promise<void> {
+    console.log(`[VideoService] Renaming video: ${id} to ${newName}`);
+
+    const video = db.getVideo(id);
+    if (!video || !video.localPath) {
+      throw new Error('Video not found or not downloaded');
+    }
+
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+
+    const oldPath = video.localPath;
+    const dir = path.dirname(oldPath);
+    const ext = path.extname(oldPath);
+    const newPath = path.join(dir, `${newName}${ext}`);
+
+    // Check if file exists
+    if (!fs.existsSync(oldPath)) {
+      throw new Error('Downloaded file not found');
+    }
+
+    // Check if new name already exists
+    if (fs.existsSync(newPath) && oldPath !== newPath) {
+      throw new Error('A file with that name already exists');
+    }
+
+    // Rename the file
+    fs.renameSync(oldPath, newPath);
+
+    // Update database
+    db.updateDownloadStatus(id, 'completed', newPath);
+
+    console.log(`[VideoService] Renamed ${oldPath} to ${newPath}`);
+  }
+
   async getVideo(id: string): Promise<Video | null> {
     console.log(`[VideoService] Looking up video with ID: ${id}`);
     const video = db.getVideo(id);

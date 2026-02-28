@@ -80,6 +80,17 @@ export default function VideoLibrary() {
     await loadVideos();
   };
 
+  const handleRename = async (videoId: string, newName: string) => {
+    try {
+      await window.electronAPI.renameVideo(videoId, newName);
+      // Reload videos to update the UI
+      await loadVideos();
+    } catch (error) {
+      console.error('Failed to rename video:', error);
+      alert(`Failed to rename file: ${error}`);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="video-library loading">
@@ -121,6 +132,7 @@ export default function VideoLibrary() {
               video={video}
               onDownload={handleDownload}
               onDelete={handleDelete}
+              onRename={handleRename}
             />
           ))
         )}
