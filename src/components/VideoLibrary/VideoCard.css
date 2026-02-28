@@ -64,8 +64,21 @@
 .video-actions {
   padding: 8px;
   border-top: 1px solid var(--black);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.video-actions button {
-  width: 100%;
+.video-actions-row {
+  display: flex;
+  gap: 6px;
+}
+
+.video-actions-row button {
+  flex: 1;
+}
+
+.delete-button {
+  background: var(--gray-light) !important;
+  font-size: 11px;
 }

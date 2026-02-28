@@ -103,6 +103,11 @@ export class VideoDatabase {
     return row.count;
   }
 
+  deleteVideo(id: string): void {
+    const stmt = this.db.prepare('DELETE FROM videos WHERE id = ?');
+    stmt.run(id);
+  }
+
   private rowToVideo(row: any): Video {
     return {
       id: row.id,

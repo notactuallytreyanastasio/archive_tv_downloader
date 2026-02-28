@@ -49,6 +49,16 @@ export default function VideoLibrary() {
     }
   };
 
+  const handleDelete = async (videoId: string) => {
+    try {
+      await window.electronAPI.deleteVideo(videoId);
+      // Reload videos to update the UI
+      await loadVideos();
+    } catch (error) {
+      console.error('Failed to delete video:', error);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="video-library loading">
@@ -80,7 +90,12 @@ export default function VideoLibrary() {
           </div>
         ) : (
           filteredVideos.map((video) => (
-            <VideoCard key={video.id} video={video} onDownload={handleDownload} />
+            <VideoCard
+              key={video.id}
+              video={video}
+              onDownload={handleDownload}
+              onDelete={handleDelete}
+            />
           ))
         )}
       </div>

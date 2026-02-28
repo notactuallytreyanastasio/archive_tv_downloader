@@ -14,9 +14,10 @@ interface Video {
 interface VideoCardProps {
   video: Video;
   onDownload: (videoId: string) => void;
+  onDelete: (videoId: string) => void;
 }
 
-export default function VideoCard({ video, onDownload }: VideoCardProps) {
+export default function VideoCard({ video, onDownload, onDelete }: VideoCardProps) {
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString();
   };
@@ -45,13 +46,27 @@ export default function VideoCard({ video, onDownload }: VideoCardProps) {
         )}
       </div>
       <div className="video-actions">
-        {isDownloaded ? (
-          <button disabled>Downloaded</button>
-        ) : isDownloading ? (
-          <button disabled>Downloading...</button>
-        ) : (
-          <button onClick={() => onDownload(video.id)}>Download</button>
-        )}
+        <div className="video-actions-row">
+          {isDownloaded ? (
+            <button disabled>Downloaded</button>
+          ) : isDownloading ? (
+            <button disabled>Downloading...</button>
+          ) : (
+            <button onClick={() => onDownload(video.id)}>Download</button>
+          )}
+        </div>
+        <div className="video-actions-row">
+          <button
+            onClick={() => {
+              if (confirm(`Remove "${video.title}" from library?`)) {
+                onDelete(video.id);
+              }
+            }}
+            className="delete-button"
+          >
+            Remove
+          </button>
+        </div>
       </div>
     </div>
   );

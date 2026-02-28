@@ -39,6 +39,15 @@ export function setupIPCHandlers() {
     }
   });
 
+  ipcMain.handle('delete-video', async (_event, videoId: string) => {
+    try {
+      await videoService.deleteVideo(videoId);
+    } catch (error) {
+      console.error('Error in delete-video handler:', error);
+      throw error;
+    }
+  });
+
   // Download handlers
   ipcMain.handle('download-video', async (_event, videoId: string) => {
     try {

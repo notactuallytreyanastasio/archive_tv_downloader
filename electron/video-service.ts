@@ -59,6 +59,11 @@ export class VideoService {
     }
   }
 
+  async deleteVideo(id: string): Promise<void> {
+    console.log(`[VideoService] Deleting video: ${id}`);
+    db.deleteVideo(id);
+  }
+
   async getVideo(id: string): Promise<Video | null> {
     console.log(`[VideoService] Looking up video with ID: ${id}`);
     const video = db.getVideo(id);
