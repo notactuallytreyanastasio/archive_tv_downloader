@@ -1,0 +1,73 @@
+.settings-dialog {
+  min-width: 500px;
+}
+
+.setting-group {
+  margin-bottom: 20px;
+}
+
+.setting-group label {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+.path-selector {
+  display: flex;
+  gap: 8px;
+}
+
+.path-input {
+  flex: 1;
+  background: var(--gray-light);
+  cursor: not-allowed;
+}
+
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.slider {
+  flex: 1;
+  height: 20px;
+  appearance: none;
+  background: var(--white);
+  border: 1px solid var(--black);
+  outline: none;
+}
+
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  background: var(--white);
+  border: 1px solid var(--black);
+  cursor: pointer;
+  box-shadow: 1px 1px 0 var(--black);
+}
+
+.slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: var(--white);
+  border: 1px solid var(--black);
+  cursor: pointer;
+  box-shadow: 1px 1px 0 var(--black);
+}
+
+.slider-value {
+  min-width: 24px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.setting-group label input[type='checkbox'] {
+  margin-right: 8px;
+  width: 14px;
+  height: 14px;
+  vertical-align: middle;
+}

@@ -1,0 +1,66 @@
+.queue-item {
+  border: 1px solid var(--black);
+  background: var(--white);
+  padding: 12px;
+}
+
+.queue-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.queue-item-title {
+  font-weight: bold;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.queue-item-status {
+  font-size: 10px;
+  color: var(--gray-3);
+  white-space: nowrap;
+}
+
+.queue-item-completed .queue-item-status {
+  color: var(--black);
+}
+
+.queue-item-failed .queue-item-status {
+  color: var(--black);
+  font-weight: bold;
+}
+
+.queue-item-progress {
+  margin-bottom: 8px;
+}
+
+.progress-stats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--gray-3);
+  margin-top: 4px;
+}
+
+.queue-item-error {
+  font-size: 10px;
+  color: var(--black);
+  background: var(--gray-light);
+  padding: 8px;
+  border: 1px solid var(--black);
+  margin-bottom: 8px;
+}
+
+.queue-item-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.queue-item-actions button {
+  padding: 4px 12px;
+}
