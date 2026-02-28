@@ -2,7 +2,7 @@ import { app } from 'electron';
 import path from 'node:path';
 import { DownloadManager } from '../src/lib/download-manager.js';
 import type { DownloadEvent, DownloadEventHandler } from '../src/lib/download-manager.js';
-import { store } from './main.js';
+import { store } from './store.js';
 import { getMainWindow } from './main.js';
 import { videoService } from './video-service.js';
 

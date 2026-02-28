@@ -1,25 +1,9 @@
-import { app, BrowserWindow, ipcMain, dialog } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import Store from 'electron-store';
 import { setupIPCHandlers } from './ipc-handlers.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-
-// Define the schema for electron-store
-interface StoreSchema {
-  downloadPath: string;
-  maxConcurrent: number;
-  autoStart: boolean;
-}
-
-export const store = new Store<StoreSchema>({
-  defaults: {
-    downloadPath: app.getPath('downloads'),
-    maxConcurrent: 2,
-    autoStart: true,
-  },
-});
 
 process.env.APP_ROOT = path.join(__dirname, '..');
 

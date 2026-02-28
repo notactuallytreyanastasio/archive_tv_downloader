@@ -1,7 +1,8 @@
 import { ipcMain, dialog } from 'electron';
 import { videoService } from './video-service.js';
 import { downloadService } from './download-service.js';
-import { store, getMainWindow } from './main.js';
+import { store } from './store.js';
+import { getMainWindow } from './main.js';
 
 export function setupIPCHandlers() {
   // Video handlers
