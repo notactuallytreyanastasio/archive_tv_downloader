@@ -6,7 +6,8 @@ import SettingsDialog from './components/Settings/SettingsDialog';
 function App() {
   const [currentView, setCurrentView] = useState<'library' | 'queue'>('library');
   const [showSettings, setShowSettings] = useState(false);
-  const [isFirstRun, setIsFirstRun] = useState(false);
+  const [showCollectionInput, setShowCollectionInput] = useState(false);
+  const [collectionUrl, setCollectionUrl] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncProgress, setSyncProgress] = useState({ fetched: 0, total: 0 });
 
@@ -27,19 +28,26 @@ function App() {
   const checkFirstRun = async () => {
     const videos = await window.electronAPI.getVideos();
     if (videos.length === 0) {
-      setIsFirstRun(true);
-      // Auto-start sync on first run
-      startSync();
+      setShowCollectionInput(true);
     }
   };
 
-  const startSync = async () => {
+  const handleSyncCollection = async () => {
+    if (!collectionUrl.trim()) return;
+
+    // Extract collection name from URL
+    // Supports: https://archive.org/details/collectionname or just "collectionname"
+    const match = collectionUrl.match(/archive\.org\/details\/([^\/\?]+)|^([a-zA-Z0-9_-]+)$/);
+    const collectionName = match ? (match[1] || match[2]) : collectionUrl;
+
     setIsSyncing(true);
+    setShowCollectionInput(false);
     try {
-      await window.electronAPI.syncCollection();
-      setIsFirstRun(false);
+      await window.electronAPI.syncCollection(collectionName);
     } catch (error) {
       console.error('Sync failed:', error);
+      alert(`Failed to sync collection: ${error}`);
+      setShowCollectionInput(true);
     } finally {
       setIsSyncing(false);
     }
@@ -58,10 +66,43 @@ function App() {
         <div className="menu-bar-item" onClick={() => setCurrentView('queue')}>
           Downloads
         </div>
+        <div className="menu-bar-item" onClick={() => setShowCollectionInput(true)}>
+          New Collection
+        </div>
       </div>
 
       {/* Main Content */}
       <div className="app-content">
+        {/* Collection Input Dialog */}
+        {showCollectionInput && (
+          <div className="dialog-overlay">
+            <div className="dialog">
+              <div className="dialog-title">Enter Archive.org Collection</div>
+              <div className="dialog-content">
+                <p>Enter a collection URL or name:</p>
+                <input
+                  type="text"
+                  value={collectionUrl}
+                  onChange={(e) => setCollectionUrl(e.target.value)}
+                  placeholder="https://archive.org/details/markpines"
+                  style={{ width: '100%', marginTop: '8px' }}
+                  autoFocus
+                  onKeyPress={(e) => e.key === 'Enter' && handleSyncCollection()}
+                />
+              </div>
+              <div className="dialog-buttons">
+                {!isSyncing && (
+                  <button onClick={() => setShowCollectionInput(false)}>Cancel</button>
+                )}
+                <button onClick={handleSyncCollection} disabled={!collectionUrl.trim()}>
+                  Sync Collection
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Sync Progress */}
         {isSyncing && (
           <div className="sync-overlay">
             <div className="sync-dialog">

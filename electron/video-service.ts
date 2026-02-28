@@ -8,9 +8,6 @@ import type { Video } from '../src/lib/types.js';
 const dbPath = path.join(app.getPath('userData'), 'videos.db');
 const db = new VideoDatabase(dbPath);
 
-// Initialize Archive.org client
-const archiveClient = new ArchiveClient('markpines');
-
 export class VideoService {
   async getAllVideos(): Promise<Video[]> {
     try {
@@ -35,16 +32,18 @@ export class VideoService {
   }
 
   async syncCollection(
+    collectionName: string,
     onProgress?: (fetched: number, total: number) => void
   ): Promise<void> {
     try {
+      const archiveClient = new ArchiveClient(collectionName);
       const videos = await archiveClient.getAllVideos(onProgress);
 
       for (const video of videos) {
         db.insertVideo(video);
       }
 
-      console.log(`Sync complete! Total videos: ${videos.length}`);
+      console.log(`Sync complete! Total videos: ${videos.length} from collection: ${collectionName}`);
     } catch (error) {
       console.error('Error syncing collection:', error);
       throw error;

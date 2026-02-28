@@ -24,11 +24,11 @@ export function setupIPCHandlers() {
     }
   });
 
-  ipcMain.handle('sync-collection', async () => {
+  ipcMain.handle('sync-collection', async (_event, collectionName: string) => {
     try {
       const mainWindow = getMainWindow();
 
-      await videoService.syncCollection((fetched, total) => {
+      await videoService.syncCollection(collectionName, (fetched, total) => {
         if (mainWindow) {
           mainWindow.webContents.send('sync-progress', { fetched, total });
         }
