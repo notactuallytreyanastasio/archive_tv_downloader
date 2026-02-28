@@ -38,6 +38,11 @@
   padding: 6px 16px;
 }
 
+.remove-all-button {
+  background: var(--gray-light);
+  padding: 6px 16px;
+}
+
 .video-grid {
   flex: 1;
   overflow-y: auto;

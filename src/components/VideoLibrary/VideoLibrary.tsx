@@ -59,6 +59,27 @@ export default function VideoLibrary() {
     }
   };
 
+  const handleRemoveAll = async () => {
+    if (filteredVideos.length === 0) return;
+
+    const confirmed = confirm(
+      `Remove ${filteredVideos.length} video${filteredVideos.length !== 1 ? 's' : ''} from library?\n\nThis will NOT delete downloaded files, only remove them from the library.`
+    );
+
+    if (!confirmed) return;
+
+    for (const video of filteredVideos) {
+      try {
+        await window.electronAPI.deleteVideo(video.id);
+      } catch (error) {
+        console.error(`Failed to remove ${video.title}:`, error);
+      }
+    }
+
+    // Reload videos to update the UI
+    await loadVideos();
+  };
+
   if (isLoading) {
     return (
       <div className="video-library loading">
@@ -76,9 +97,14 @@ export default function VideoLibrary() {
             {filteredVideos.length} video{filteredVideos.length !== 1 ? 's' : ''}
           </div>
           {filteredVideos.length > 0 && (
-            <button onClick={handleDownloadAll} className="download-all-button">
-              Download All ({filteredVideos.length})
-            </button>
+            <>
+              <button onClick={handleDownloadAll} className="download-all-button">
+                Download All ({filteredVideos.length})
+              </button>
+              <button onClick={handleRemoveAll} className="remove-all-button">
+                Remove All ({filteredVideos.length})
+              </button>
+            </>
           )}
         </div>
       </div>
