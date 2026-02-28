@@ -1,8 +1,7 @@
-// Archive.org API client - standalone version
+// Archive.org API client - supports both collections and individual items
 import type { Video } from './types';
 
 const ARCHIVE_API_BASE = 'https://archive.org';
-const DEFAULT_COLLECTION = 'markpines';
 
 interface ArchiveSearchResponse {
   response: {
@@ -28,6 +27,7 @@ interface ArchiveMetadataResponse {
     creator?: string;
     date?: string;
     runtime?: string;
+    mediatype?: string;
   };
   d1?: string;
   d2?: string;
@@ -45,52 +45,85 @@ interface ArchiveFile {
 }
 
 export class ArchiveClient {
-  private collection: string;
-
-  constructor(collection: string = DEFAULT_COLLECTION) {
-    this.collection = collection;
+  async getMetadata(identifier: string): Promise<ArchiveMetadataResponse> {
+    const url = `${ARCHIVE_API_BASE}/metadata/${identifier}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch metadata: ${response.statusText}`);
+    }
+    return await response.json();
   }
 
-  async searchCollection(rows: number = 100, start: number = 0): Promise<ArchiveDoc[]> {
+  async getSingleItem(identifier: string): Promise<Video | null> {
+    try {
+      const metadata = await this.getMetadata(identifier);
+      const videoFile = this.selectBestVideoFile(metadata.files);
+
+      if (!videoFile) {
+        throw new Error('No video files found in this item');
+      }
+
+      const downloadUrl = this.constructDownloadUrl(metadata, videoFile);
+      const thumbnailUrl = `${ARCHIVE_API_BASE}/services/img/${identifier}`;
+
+      return {
+        id: identifier,
+        title: metadata.metadata.title || identifier,
+        description: metadata.metadata.description || null,
+        publicDate: new Date(metadata.metadata.date || Date.now()),
+        duration: this.parseDuration(metadata.metadata.runtime),
+        thumbnailUrl,
+        primaryVideoUrl: downloadUrl,
+        primaryFormat: videoFile.format,
+        collection: 'single-item',
+        downloadStatus: 'not_downloaded',
+      };
+    } catch (error) {
+      console.error(`Failed to fetch item ${identifier}:`, error);
+      throw error;
+    }
+  }
+
+  async searchCollection(collection: string, rows: number = 100, start: number = 0): Promise<ArchiveDoc[]> {
     const fields = 'identifier,title,description,publicdate,creator,runtime';
-    const url = `${ARCHIVE_API_BASE}/advancedsearch.php?q=collection:${this.collection}&fl=${fields}&rows=${rows}&page=1&output=json&sort=publicdate+desc&start=${start}`;
+    const url = `${ARCHIVE_API_BASE}/advancedsearch.php?q=collection:${collection}&fl=${fields}&rows=${rows}&page=1&output=json&sort=publicdate+desc&start=${start}`;
 
     const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to search collection: ${response.statusText}`);
+    }
     const data: ArchiveSearchResponse = await response.json();
     return data.response.docs;
   }
 
-  async getMetadata(identifier: string): Promise<ArchiveMetadataResponse> {
-    const url = `${ARCHIVE_API_BASE}/metadata/${identifier}`;
-    const response = await fetch(url);
-    return await response.json();
-  }
-
-  async getAllVideos(onProgress?: (fetched: number, total: number) => void): Promise<Video[]> {
+  async getAllFromCollection(collection: string, onProgress?: (fetched: number, total: number) => void): Promise<Video[]> {
     const videos: Video[] = [];
     let start = 0;
     const batchSize = 100;
-    let total = 0;
 
     // First batch to get total count
-    const firstBatch = await this.searchCollection(batchSize, start);
+    const firstBatch = await this.searchCollection(collection, batchSize, start);
+
+    if (firstBatch.length === 0) {
+      throw new Error(`Collection "${collection}" not found or is empty`);
+    }
 
     for (const doc of firstBatch) {
-      const video = await this.docToVideo(doc);
+      const video = await this.docToVideo(doc, collection);
       if (video) videos.push(video);
-      if (onProgress) onProgress(videos.length, total || firstBatch.length);
+      if (onProgress) onProgress(videos.length, firstBatch.length);
     }
 
     // Continue fetching if there are more
     start += batchSize;
     while (firstBatch.length === batchSize) {
-      const batch = await this.searchCollection(batchSize, start);
+      const batch = await this.searchCollection(collection, batchSize, start);
       if (batch.length === 0) break;
 
       for (const doc of batch) {
-        const video = await this.docToVideo(doc);
+        const video = await this.docToVideo(doc, collection);
         if (video) videos.push(video);
-        if (onProgress) onProgress(videos.length, total || videos.length);
+        if (onProgress) onProgress(videos.length, videos.length);
       }
 
       start += batchSize;
@@ -100,7 +133,37 @@ export class ArchiveClient {
     return videos;
   }
 
-  private async docToVideo(doc: ArchiveDoc): Promise<Video | null> {
+  async detectAndSync(identifierOrCollection: string, onProgress?: (fetched: number, total: number) => void): Promise<Video[]> {
+    // First, try to get metadata to see if it's a single item
+    try {
+      const metadata = await this.getMetadata(identifierOrCollection);
+
+      // Check if it's a video item (not a collection)
+      if (metadata.metadata.mediatype === 'movies' || this.hasVideoFiles(metadata.files)) {
+        console.log(`Detected single video item: ${identifierOrCollection}`);
+        const video = await this.getSingleItem(identifierOrCollection);
+        if (video) {
+          if (onProgress) onProgress(1, 1);
+          return [video];
+        }
+        return [];
+      }
+    } catch (error) {
+      // If metadata fetch fails, assume it's a collection
+      console.log(`Could not fetch as item, trying as collection: ${identifierOrCollection}`);
+    }
+
+    // Try as collection
+    return await this.getAllFromCollection(identifierOrCollection, onProgress);
+  }
+
+  private hasVideoFiles(files: ArchiveFile[]): boolean {
+    return files.some(f =>
+      ['h.264', 'MPEG4', '512Kb MPEG4', 'WebM', 'Ogg Video', 'MPEG2'].includes(f.format)
+    );
+  }
+
+  private async docToVideo(doc: ArchiveDoc, collection: string): Promise<Video | null> {
     try {
       const metadata = await this.getMetadata(doc.identifier);
       const videoFile = this.selectBestVideoFile(metadata.files);
@@ -119,7 +182,7 @@ export class ArchiveClient {
         thumbnailUrl,
         primaryVideoUrl: downloadUrl,
         primaryFormat: videoFile.format,
-        collection: this.collection,
+        collection,
         downloadStatus: 'not_downloaded',
       };
     } catch (error) {
@@ -136,7 +199,10 @@ export class ArchiveClient {
       if (file) return file;
     }
 
-    return null;
+    // Fallback to any video format
+    return files.find(f =>
+      ['h.264', 'MPEG4', '512Kb MPEG4', 'WebM', 'Ogg Video', 'MPEG2'].includes(f.format)
+    ) || null;
   }
 
   private constructDownloadUrl(metadata: ArchiveMetadataResponse, file: ArchiveFile): string {

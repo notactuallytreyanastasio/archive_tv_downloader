@@ -79,16 +79,19 @@ function App() {
             <div className="dialog">
               <div className="dialog-title">Enter Archive.org Collection</div>
               <div className="dialog-content">
-                <p>Enter a collection URL or name:</p>
+                <p>Enter a collection or video URL:</p>
                 <input
                   type="text"
                   value={collectionUrl}
                   onChange={(e) => setCollectionUrl(e.target.value)}
-                  placeholder="https://archive.org/details/markpines"
+                  placeholder="https://archive.org/details/..."
                   style={{ width: '100%', marginTop: '8px' }}
                   autoFocus
                   onKeyPress={(e) => e.key === 'Enter' && handleSyncCollection()}
                 />
+                <p style={{ fontSize: '10px', marginTop: '8px', color: '#888' }}>
+                  Works with both collections and individual videos
+                </p>
               </div>
               <div className="dialog-buttons">
                 {!isSyncing && (

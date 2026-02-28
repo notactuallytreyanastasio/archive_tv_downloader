@@ -32,20 +32,20 @@ export class VideoService {
   }
 
   async syncCollection(
-    collectionName: string,
+    identifierOrCollection: string,
     onProgress?: (fetched: number, total: number) => void
   ): Promise<void> {
     try {
-      const archiveClient = new ArchiveClient(collectionName);
-      const videos = await archiveClient.getAllVideos(onProgress);
+      const archiveClient = new ArchiveClient();
+      const videos = await archiveClient.detectAndSync(identifierOrCollection, onProgress);
 
       for (const video of videos) {
         db.insertVideo(video);
       }
 
-      console.log(`Sync complete! Total videos: ${videos.length} from collection: ${collectionName}`);
+      console.log(`Sync complete! Total videos: ${videos.length} from: ${identifierOrCollection}`);
     } catch (error) {
-      console.error('Error syncing collection:', error);
+      console.error('Error syncing:', error);
       throw error;
     }
   }
