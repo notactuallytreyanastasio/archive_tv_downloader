@@ -60,7 +60,10 @@ export class VideoService {
   }
 
   async getVideo(id: string): Promise<Video | null> {
-    return db.getVideo(id);
+    console.log(`[VideoService] Looking up video with ID: ${id}`);
+    const video = db.getVideo(id);
+    console.log(`[VideoService] Video found:`, video ? video.title : 'NOT FOUND');
+    return video;
   }
 
   async updateDownloadStatus(id: string, status: string, localPath?: string): Promise<void> {

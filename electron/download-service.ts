@@ -72,12 +72,17 @@ export class DownloadService {
 
   async downloadVideo(videoId: string): Promise<void> {
     try {
+      console.log(`[DownloadService] Attempting to download video: ${videoId}`);
+
       // Get video from database
       const video = await videoService.getVideo(videoId);
 
       if (!video) {
+        console.error(`[DownloadService] Video not found in database: ${videoId}`);
         throw new Error(`Video not found: ${videoId}`);
       }
+
+      console.log(`[DownloadService] Found video: ${video.title}`);
 
       const downloadPath = store.get('downloadPath') || app.getPath('downloads');
 
