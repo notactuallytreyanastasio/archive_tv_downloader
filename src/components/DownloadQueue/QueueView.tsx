@@ -27,7 +27,7 @@ export default function QueueView() {
     });
 
     const unsubscribeComplete = window.electronAPI.onDownloadComplete((_event, data) => {
-      markCompleted(data.videoId, data.localPath);
+      markCompleted(data.videoId);
     });
 
     const unsubscribeFailed = window.electronAPI.onDownloadFailed((_event, data) => {

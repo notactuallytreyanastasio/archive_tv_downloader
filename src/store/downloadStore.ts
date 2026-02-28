@@ -24,7 +24,7 @@ interface DownloadStore {
   addToQueue: (videoId: string, position: number) => void;
   removeFromQueue: (videoId: string) => void;
   updateProgress: (progress: DownloadProgress) => void;
-  markCompleted: (videoId: string, localPath: string) => void;
+  markCompleted: (videoId: string) => void;
   markFailed: (videoId: string, error: string) => void;
   clearCompleted: () => void;
 }
@@ -53,7 +53,7 @@ export const useDownloadStore = create<DownloadStore>((set, get) => ({
     set({ activeDownloads });
   },
 
-  markCompleted: (videoId, localPath) => {
+  markCompleted: (videoId) => {
     const completedDownloads = new Set(get().completedDownloads);
     completedDownloads.add(videoId);
 

@@ -9,6 +9,7 @@ interface Video {
   duration: number | null;
   thumbnailUrl: string;
   downloadStatus?: string;
+  localPath?: string | null;
 }
 
 interface VideoCardProps {
