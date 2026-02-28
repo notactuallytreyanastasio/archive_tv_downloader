@@ -9,6 +9,18 @@ export default defineConfig({
     electron({
       main: {
         entry: 'electron/main.ts',
+        vite: {
+          build: {
+            rollupOptions: {
+              external: [
+                'electron',
+                'better-sqlite3',
+                'drizzle-orm',
+                'electron-store',
+              ],
+            },
+          },
+        },
       },
       preload: {
         input: path.join(__dirname, 'electron/preload.ts'),
